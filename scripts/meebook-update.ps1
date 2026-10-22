@@ -17,7 +17,7 @@ function Fail([string]$msg) {
     exit 1
 }
 
-function Git {
+function Invoke-Git {
     & git @args
     if ($LASTEXITCODE -ne 0) { Fail ("Ошибка: git " + ($args -join ' ') + " (код $LASTEXITCODE)") }
 }
@@ -33,7 +33,7 @@ if ($dirty) { Fail 'Обновление остановлено: в рабоче
 if ($LASTEXITCODE -ne 0) { Fail 'Нет ветки meebook.' }
 
 # --- 1. Fetch и выбор тега
-Git fetch upstream --tags
+Invoke-Git fetch upstream --tags
 if (-not $Tag) {
     $Tag = (& git tag -l 'v*' --sort=-v:refname | Where-Object { $_ -match '^v\d+\.\d+\.\d+$' } | Select-Object -First 1)
     if (-not $Tag) { Fail 'Не найден ни один релизный тег v*.' }
@@ -68,13 +68,13 @@ Gradle @(':app:assembleMeebook')
 # --- 4. Фиксация результата
 $dirty = & git status --porcelain
 if ($dirty) {
-    Git add -A
-    Git commit -m 'style(meebook): spotlessApply after rebase' -m 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'
+    Invoke-Git add -A
+    Invoke-Git commit -m 'style(meebook): spotlessApply after rebase' -m 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'
 }
 if ($oldBase -ne $Tag) {
     Set-Content -Path '.meebook-base' -Value $Tag -Encoding Ascii
-    Git add .meebook-base
-    Git commit -m "chore(meebook): rebase onto $Tag" -m 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'
+    Invoke-Git add .meebook-base
+    Invoke-Git commit -m "chore(meebook): rebase onto $Tag" -m 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'
 }
 
 # --- 5. Итог
