@@ -48,7 +48,7 @@ Write-Host "База: $oldBase -> $Tag" -ForegroundColor Cyan
 if ($LASTEXITCODE -eq 0) {
     # Режим продолжения: ветка уже содержит $Tag (повторный запуск после упавшей сборки
     # или база не менялась). Rebase пропускаем, сразу проверки и сборка.
-    Write-Host "Ветка meebook уже содержит $Tag: rebase пропущен, переходим к проверкам и сборке." -ForegroundColor Yellow
+    Write-Host "Ветка meebook уже содержит ${Tag}: rebase пропущен, переходим к проверкам и сборке." -ForegroundColor Yellow
 } else {
     & git rebase --empty=drop --onto $Tag $oldBase meebook
     if ($LASTEXITCODE -ne 0) {
