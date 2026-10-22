@@ -2,8 +2,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- MEEBOOK --> <!-- Permissions and provider/activity declarations are added here in later tasks. -->
+    <!-- MEEBOOK --> <!-- Bridge to the owner's launcher; only the meebook build exposes it. -->
+    <permission
+        android:name="app.komikku.meebook.permission.BRIDGE"
+        android:protectionLevel="signature" />
+
     <application
         android:label="@string/meebook_app_name"
-        tools:replace="android:label" />
+        tools:replace="android:label">
+
+        <provider
+            android:name="komikku.meebook.bridge.BridgeProvider"
+            android:authorities="app.komikku.meebook.bridge"
+            android:exported="true"
+            android:readPermission="app.komikku.meebook.permission.BRIDGE" />
+    </application>
 </manifest>

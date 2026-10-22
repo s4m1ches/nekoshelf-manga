@@ -77,6 +77,7 @@ import exh.log.EnhancedFilePrinter
 import exh.log.XLogLogcatLogger
 import exh.log.xLogD
 import komikku.meebook.bridge.DwellTracker
+import komikku.meebook.bridge.HistoryBackfill
 import komikku.meebook.bridge.ReadingLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
@@ -174,6 +175,10 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
 
         val scope = ProcessLifecycleOwner.get().lifecycleScope
+
+        // MEEBOOK -->
+        HistoryBackfill.start(this, scope)
+        // MEEBOOK <--
 
         // Show notification to disable Incognito Mode when it's enabled
         basePreferences.incognitoMode().changes()
