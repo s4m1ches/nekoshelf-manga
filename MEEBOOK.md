@@ -21,10 +21,34 @@ E-ink row (Regal, refresh 5) for `app.komikku.meebook` only, via `content insert
 `content://com.android.systemui.eink/einksettings` with `package_name=app.komikku.meebook`,
 `refresh_mode=10`, `refresh_frequency=5`.
 
-## Migration from stock Komikku (owner)
+## Миграция со стандартного Komikku (владелец)
 
-1. In Komikku: Настройки → Резервное копирование → Создать.
-2. In «Манга»: first launch onboarding (storage folder `/storage/emulated/0/Manga`), then Восстановить
-   from `/sdcard/Manga/autobackup` or the chosen file.
-3. Reinstall extensions if they are missing.
-4. Check that the library opens, then uninstall Komikku.
+Библиотека, история и категории переносятся через резервную копию. Komikku и «Манга» ставятся рядом
+и не мешают друг другу, поэтому удалять Komikku можно только в конце.
+
+1. В Komikku: Настройки -> Резервное копирование -> Создать. Запомните путь файла и **число
+   манги в библиотеке** (его видно в заголовке/категориях библиотеки).
+2. Скопируйте файл резервной копии туда, где «Манга» его увидит (например `/sdcard/Manga/autobackup`
+   или `/sdcard/Download`).
+3. Установите «Манга» (команда выше) и запустите: пройдите первичную настройку, папка хранилища
+   `/storage/emulated/0/Manga`.
+4. В «Манга»: Настройки -> Резервное копирование -> Восстановить, выберите файл из шага 1.
+5. Если расширения (источники) не появились, установите их заново: Обзор -> Расширения.
+6. Сверьте **число манги в библиотеке «Манга»** с записанным в шаге 1, откройте пару тайтлов и
+   проверьте прогресс чтения. Если число не совпало, не удаляйте Komikku: повторите восстановление.
+7. Только после совпадения удалите Komikku.
+
+## Обновление
+
+Чтобы пересобрать «Манга» на новом релизе Komikku, одной командой из корня репозитория
+(Windows PowerShell 5.1):
+
+    powershell -ExecutionPolicy Bypass -File scripts\meebook-update.ps1 [-Tag v1.15.0]
+
+Без `-Tag` берётся новейший тег `v*` из `upstream`. Скрипт: `git fetch upstream --tags`, затем
+`git rebase --onto <тег> <старая база> meebook` (старая база хранится в `.meebook-base`; коммиты,
+ставшие пустыми после rebase, например cherry-pick апстримного фикса, отбрасываются автоматически),
+затем `spotlessApply`, `spotlessCheck`, тесты `komikku.meebook.bridge.*` и `:app:assembleMeebook`.
+При успехе обновляется `.meebook-base` и печатается команда `adb install -r`.
+При конфликте rebase отменяется, выводится «Обновление остановлено: конфликт в ...» и список файлов,
+ветка остаётся нетронутой; конфликт разбирается вручную. Скрипт ничего не пушит.
