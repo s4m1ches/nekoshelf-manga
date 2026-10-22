@@ -541,14 +541,14 @@ class ReaderActivity : BaseActivity() {
         // <-- AM (DISCORD)
 
         // MEEBOOK -->
-        Injekt.get<DwellTracker>().onPause()?.let { record ->
-            val log = Injekt.get<ReadingLog>()
-            val resolver = applicationContext.contentResolver
-            lifecycleScope.launchNonCancellable {
-                withIOContext {
-                    log.add(record)
-                    resolver.notifyChange(Uri.parse("content://app.komikku.meebook.bridge/"), null)
-                }
+        val dwellRecord = Injekt.get<DwellTracker>().onPause()
+        val readingLog = Injekt.get<ReadingLog>()
+        val resolver = applicationContext.contentResolver
+        lifecycleScope.launchNonCancellable {
+            withIOContext {
+                dwellRecord?.let(readingLog::add)
+                // Always notify: earlier pages were written by onPageSelected without a notification.
+                resolver.notifyChange(Uri.parse("content://app.komikku.meebook.bridge/"), null)
             }
         }
         // MEEBOOK <--
