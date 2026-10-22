@@ -541,14 +541,18 @@ class ReaderActivity : BaseActivity() {
         // <-- AM (DISCORD)
 
         // MEEBOOK -->
-        val dwellRecord = Injekt.get<DwellTracker>().onPause()
+        val dwellRecord = Injekt.get<DwellTracker>().onPause().takeUnless { viewModel.incognitoMode }
         val readingLog = Injekt.get<ReadingLog>()
         val resolver = applicationContext.contentResolver
         lifecycleScope.launchNonCancellable {
             withIOContext {
-                dwellRecord?.let(readingLog::add)
-                // Always notify: earlier pages were written by onPageSelected without a notification.
-                resolver.notifyChange(Uri.parse("content://app.komikku.meebook.bridge/"), null)
+                try {
+                    dwellRecord?.let(readingLog::add)
+                    // Always notify: earlier pages were written by onPageSelected without a notification.
+                    resolver.notifyChange(Uri.parse("content://app.komikku.meebook.bridge/"), null)
+                } catch (e: Exception) {
+                    logcat(LogPriority.WARN, e) { "MEEBOOK: reading log flush failed" }
+                }
             }
         }
         // MEEBOOK <--
@@ -565,7 +569,7 @@ class ReaderActivity : BaseActivity() {
         viewModel.restartReadTimer()
 
         // MEEBOOK -->
-        viewModel.lastDwellKey?.let { Injekt.get<DwellTracker>().onResume(it) }
+        viewModel.lastDwellKey?.let { Injekt.get<DwellTracker>().onResume(it, viewModel.incognitoMode) }
         // MEEBOOK <--
 
         // AM (DISCORD) -->

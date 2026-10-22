@@ -85,4 +85,27 @@ class HistoryBackfillTest {
         HistoryBackfill.runOnce(flag, log, zone) { emptyList() } shouldBe false
         flag.done shouldBe false
     }
+
+    @Test
+    fun `running twice backfills each day once`() {
+        HistoryBackfill.run(log, history, zone) shouldBe 2
+        HistoryBackfill.run(log, history, zone) shouldBe 0
+        store.backfills shouldBe listOf("2026-10-20" to 150, "2026-10-21" to 30)
+    }
+
+    @Test
+    fun `rerun after a partial import only adds the missing days`() {
+        log.addBackfill("2026-10-20", 150)
+        HistoryBackfill.run(log, history, zone) shouldBe 1
+        store.backfills shouldBe listOf("2026-10-20" to 150, "2026-10-21" to 30)
+    }
+
+    @Test
+    fun `history covered only by live days leaves the flag unset`() = runTest {
+        log.add(DwellRecord("2026-10-19", 40))
+        val flag = FakeFlag()
+        HistoryBackfill.runOnce(flag, log, zone) { history } shouldBe false
+        flag.done shouldBe false
+        store.backfills shouldBe emptyList()
+    }
 }

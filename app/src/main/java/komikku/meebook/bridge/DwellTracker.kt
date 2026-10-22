@@ -29,6 +29,19 @@ class DwellTracker(
         return record
     }
 
+    /**
+     * Page-change entry point for the reader. In incognito nothing may be recorded: the open page (if any)
+     * is closed and dropped, and no new page is opened.
+     */
+    @Synchronized
+    fun onPageShown(key: String, incognito: Boolean): DwellRecord? {
+        if (incognito) {
+            onPause()
+            return null
+        }
+        return onPageShown(key)
+    }
+
     /** Closes the current page without opening another. A second call returns null. */
     @Synchronized
     fun onPause(): DwellRecord? = close(clock())
@@ -38,8 +51,8 @@ class DwellTracker(
      * Idempotent: if a page is already open (no pause happened) the start time is kept.
      */
     @Synchronized
-    fun onResume(key: String) {
-        if (currentKey != null) return
+    fun onResume(key: String, incognito: Boolean = false) {
+        if (incognito || currentKey != null) return
         currentKey = key
         shownAt = clock()
     }

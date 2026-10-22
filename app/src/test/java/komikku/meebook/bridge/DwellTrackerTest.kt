@@ -92,4 +92,29 @@ class DwellTrackerTest {
         at(102)
         tracker.onPause() shouldBe null
     }
+
+    @Test
+    fun `incognito drops the open page and opens nothing`() {
+        at(0)
+        tracker.onPageShown("1:0")
+        at(30)
+        tracker.onPageShown("1:1", incognito = true) shouldBe null
+        at(60)
+        tracker.onPause() shouldBe null
+    }
+
+    @Test
+    fun `incognito resume does not reopen tracking`() {
+        tracker.onResume("1:0", incognito = true)
+        at(30)
+        tracker.onPause() shouldBe null
+    }
+
+    @Test
+    fun `non-incognito page shown behaves as before`() {
+        at(0)
+        tracker.onPageShown("1:0", incognito = false)
+        at(30)
+        tracker.onPageShown("1:1", incognito = false) shouldBe DwellRecord("1970-01-01", 30)
+    }
 }

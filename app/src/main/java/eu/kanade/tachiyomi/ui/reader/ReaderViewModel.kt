@@ -695,8 +695,14 @@ class ReaderViewModel @JvmOverloads constructor(
         // MEEBOOK -->
         val dwellKey = "${page.chapter.chapter.id}:${page.index}"
         lastDwellKey = dwellKey
-        dwellTracker.onPageShown(dwellKey)?.let { record ->
-            viewModelScope.launchIO { readingLog.add(record) }
+        dwellTracker.onPageShown(dwellKey, incognitoMode)?.let { record ->
+            viewModelScope.launchNonCancellable {
+                try {
+                    readingLog.add(record)
+                } catch (e: Exception) {
+                    logcat(LogPriority.WARN, e) { "MEEBOOK: reading log write failed" }
+                }
+            }
         }
         // MEEBOOK <--
 
