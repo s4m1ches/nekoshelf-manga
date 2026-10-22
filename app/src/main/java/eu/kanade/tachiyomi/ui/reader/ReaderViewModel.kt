@@ -674,6 +674,13 @@ class ReaderViewModel @JvmOverloads constructor(
         }
     }
 
+    // MEEBOOK -->
+    // Dwell key of the page last selected, used to re-open tracking on resume.
+    @Volatile
+    var lastDwellKey: String? = null
+        private set
+    // MEEBOOK <--
+
     /**
      * Called every time a page changes on the reader. Used to mark the flag of chapters being
      * read, update tracking services, enqueue downloaded chapter deletion, and updating the active chapter if this
@@ -686,7 +693,9 @@ class ReaderViewModel @JvmOverloads constructor(
         }
 
         // MEEBOOK -->
-        dwellTracker.onPageShown("${page.chapter.chapter.id}:${page.index}")?.let { record ->
+        val dwellKey = "${page.chapter.chapter.id}:${page.index}"
+        lastDwellKey = dwellKey
+        dwellTracker.onPageShown(dwellKey)?.let { record ->
             viewModelScope.launchIO { readingLog.add(record) }
         }
         // MEEBOOK <--

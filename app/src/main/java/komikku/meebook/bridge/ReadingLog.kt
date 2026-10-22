@@ -55,21 +55,27 @@ class SqliteReadingLogStore(context: Context) :
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
 
-    override fun addDay(day: String, pages: Int, seconds: Int) {
-        writableDatabase.execSQL(
-            "INSERT INTO reading_log(day, pages, seconds, backfilled) VALUES(?, ?, ?, 0) " +
-                "ON CONFLICT(day) DO UPDATE SET pages = pages + excluded.pages, " +
-                "seconds = seconds + excluded.seconds, backfilled = 0",
-            arrayOf<Any>(day, pages, seconds),
-        )
-    }
+    override fun addDay(day: String, pages: Int, seconds: Int) = upsert(day, pages, seconds, 0)
 
-    override fun addBackfill(day: String, seconds: Int) {
-        writableDatabase.execSQL(
-            "INSERT INTO reading_log(day, pages, seconds, backfilled) VALUES(?, 0, ?, 1) " +
-                "ON CONFLICT(day) DO UPDATE SET seconds = seconds + excluded.seconds, backfilled = 1",
-            arrayOf<Any>(day, seconds),
-        )
+    override fun addBackfill(day: String, seconds: Int) = upsert(day, 0, seconds, 1)
+
+    // Portable upsert (ON CONFLICT DO UPDATE needs SQLite 3.24, Android 8 ships 3.18).
+    private fun upsert(day: String, pages: Int, seconds: Int, backfilled: Int) {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            db.execSQL(
+                "INSERT OR IGNORE INTO reading_log(day, pages, seconds, backfilled) VALUES(?, 0, 0, 0)",
+                arrayOf<Any>(day),
+            )
+            db.execSQL(
+                "UPDATE reading_log SET pages = pages + ?, seconds = seconds + ?, backfilled = ? WHERE day = ?",
+                arrayOf<Any>(pages, seconds, backfilled, day),
+            )
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
     }
 
     override fun all(): List<ReadingLogRow> = readableDatabase.rawQuery(

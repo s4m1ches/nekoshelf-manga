@@ -58,4 +58,38 @@ class DwellTrackerTest {
         now = start + 50_000
         tracker.onPause() shouldBe DwellRecord("2026-10-23", 50)
     }
+
+    @Test
+    fun `pause then resume then leave after 30s`() {
+        at(0)
+        tracker.onPageShown("1:0")
+        at(10)
+        tracker.onPause()
+        at(100)
+        tracker.onResume("1:0")
+        at(130)
+        tracker.onPause()!!.seconds shouldBe 30
+    }
+
+    @Test
+    fun `resume without pause does not reset`() {
+        at(0)
+        tracker.onPageShown("1:0")
+        at(10)
+        tracker.onResume("1:0")
+        at(40)
+        tracker.onPause()!!.seconds shouldBe 40
+    }
+
+    @Test
+    fun `resume then immediate pause is dropped`() {
+        at(0)
+        tracker.onPageShown("1:0")
+        at(10)
+        tracker.onPause()
+        at(100)
+        tracker.onResume("1:0")
+        at(102)
+        tracker.onPause() shouldBe null
+    }
 }

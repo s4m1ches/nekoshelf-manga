@@ -33,6 +33,17 @@ class DwellTracker(
     @Synchronized
     fun onPause(): DwellRecord? = close(clock())
 
+    /**
+     * Re-opens tracking of the page [key] after a pause, with a fresh start time; emits nothing.
+     * Idempotent: if a page is already open (no pause happened) the start time is kept.
+     */
+    @Synchronized
+    fun onResume(key: String) {
+        if (currentKey != null) return
+        currentKey = key
+        shownAt = clock()
+    }
+
     private fun close(now: Long): DwellRecord? {
         if (currentKey == null) return null
         currentKey = null

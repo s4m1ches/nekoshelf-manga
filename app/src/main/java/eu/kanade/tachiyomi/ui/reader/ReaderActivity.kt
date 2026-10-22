@@ -564,6 +564,10 @@ class ReaderActivity : BaseActivity() {
         super.onResume()
         viewModel.restartReadTimer()
 
+        // MEEBOOK -->
+        viewModel.lastDwellKey?.let { Injekt.get<DwellTracker>().onResume(it) }
+        // MEEBOOK <--
+
         // AM (DISCORD) -->
         updateDiscordRPC(exitingReader = false)
         // <-- AM (DISCORD)
