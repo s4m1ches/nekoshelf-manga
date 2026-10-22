@@ -2,6 +2,7 @@ import mihon.buildlogic.Config
 import mihon.buildlogic.getBuildTime
 import mihon.buildlogic.getCommitCount
 import mihon.buildlogic.getGitSha
+import java.util.Properties // MEEBOOK
 
 plugins {
     id("mihon.android.application")
@@ -39,6 +40,22 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    // MEEBOOK -->
+    signingConfigs {
+        create("meebook") {
+            val keystoreFile = file("<keystore.properties>")
+            if (!keystoreFile.exists()) {
+                throw GradleException("MEEBOOK: signing properties not found: ${keystoreFile.path}")
+            }
+            val keystoreProps = Properties().apply { keystoreFile.inputStream().use { load(it) } }
+            storeFile = file(keystoreProps.getProperty("storeFile"))
+            storePassword = keystoreProps.getProperty("storePassword")
+            keyAlias = keystoreProps.getProperty("keyAlias")
+            keyPassword = keystoreProps.getProperty("keyPassword")
+        }
+    }
+    // MEEBOOK <--
 
     buildTypes {
         val debug by getting {
@@ -85,6 +102,19 @@ android {
 
             buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLastCommitTime = false)}\"")
         }
+        // MEEBOOK -->
+        create("meebook") {
+            initWith(release)
+
+            applicationIdSuffix = ".meebook"
+            isMinifyEnabled = false
+            isShrinkResources = false
+
+            signingConfig = signingConfigs.getByName("meebook")
+
+            matchingFallbacks.addAll(commonMatchingFallbacks)
+        }
+        // MEEBOOK <--
         create("benchmark") {
             initWith(release)
 

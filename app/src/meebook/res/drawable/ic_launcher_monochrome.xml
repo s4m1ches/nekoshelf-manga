@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- rounded-square outline -->
+    <path android:strokeColor="#000000" android:strokeWidth="2" android:strokeLineJoin="round"
+        android:pathData="M34,22 L74,22 A12,12 0 0 1 86,34 L86,74 A12,12 0 0 1 74,86 L34,86 A12,12 0 0 1 22,74 L22,34 A12,12 0 0 1 34,22 Z" />
+    <!-- open book -->
+    <path android:strokeColor="#000000" android:strokeWidth="2" android:strokeLineJoin="round" android:strokeLineCap="round"
+        android:pathData="M54,46 L54,78 M54,46 C48,42 38,42 31,45 L31,76 C38,73 48,73 54,78 C60,73 70,73 77,76 L77,45 C70,42 60,42 54,46 Z" />
+    <!-- speech bubble above the book -->
+    <path android:strokeColor="#000000" android:strokeWidth="2" android:strokeLineJoin="round" android:strokeLineCap="round"
+        android:pathData="M42,28 L66,28 A4,4 0 0 1 70,32 L70,38 A4,4 0 0 1 66,42 L58,42 L54,47 L52,42 L42,42 A4,4 0 0 1 38,38 L38,32 A4,4 0 0 1 42,28 Z" />
+    <path android:strokeColor="#000000" android:strokeWidth="2" android:strokeLineCap="round"
+        android:pathData="M45,35 L47,35 M52,35 L54,35 M59,35 L61,35" />
+</vector>
