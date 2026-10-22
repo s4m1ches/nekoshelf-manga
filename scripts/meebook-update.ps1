@@ -44,12 +44,26 @@ Write-Host "База: $oldBase -> $Tag" -ForegroundColor Cyan
 
 # --- 2. Rebase. --empty=drop: коммиты, ставшие пустыми (cherry-pick апстримного фикса,
 # который уже есть в новом релизе), тихо отбрасываются и не останавливают обновление.
-& git rebase --empty=drop --onto $Tag $oldBase meebook
-if ($LASTEXITCODE -ne 0) {
-    $conflicts = (& git diff --name-only --diff-filter=U) -join ', '
-    & git rebase --abort
-    if (-not $conflicts) { $conflicts = '(файлы не определены, см. вывод git выше)' }
-    Fail "Обновление остановлено: конфликт в $conflicts. Rebase отменён, ветка meebook не тронута. Разберите конфликт вручную."
+& git merge-base --is-ancestor $Tag meebook
+if ($LASTEXITCODE -eq 0) {
+    # Режим продолжения: ветка уже содержит $Tag (повторный запуск после упавшей сборки
+    # или база не менялась). Rebase пропускаем, сразу проверки и сборка.
+    Write-Host "Ветка meebook уже содержит $Tag: rebase пропущен, переходим к проверкам и сборке." -ForegroundColor Yellow
+} else {
+    & git rebase --empty=drop --onto $Tag $oldBase meebook
+    if ($LASTEXITCODE -ne 0) {
+        $conflicts = (& git diff --name-only --diff-filter=U) -join ', '
+        & git rebase --abort
+        if (-not $conflicts) { $conflicts = '(файлы не определены, см. вывод git выше)' }
+        Fail "Обновление остановлено: конфликт в $conflicts. Rebase отменён, ветка meebook не тронута. Разберите конфликт вручную."
+    }
+}
+
+# Фиксируем новую базу сразу, до сборки: повторный запуск после сбоя не будет переигрывать коммиты.
+if ($oldBase -ne $Tag) {
+    Set-Content -Path '.meebook-base' -Value $Tag -Encoding Ascii
+    Invoke-Git add .meebook-base
+    Invoke-Git commit -m "chore(meebook): rebase onto $Tag" -m 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'
 }
 
 # --- 3. Проверки и сборка (стоп на первой ошибке)
@@ -57,7 +71,7 @@ function Gradle([string[]]$gradleArgs) {
     Write-Host (".\gradlew.bat " + ($gradleArgs -join ' ')) -ForegroundColor Cyan
     & .\gradlew.bat @gradleArgs
     if ($LASTEXITCODE -ne 0) {
-        Fail ("Обновление остановлено: упала задача gradle " + ($gradleArgs -join ' ') + ". Ветка meebook уже перебазирована на $Tag; .meebook-base НЕ обновлён.")
+        Fail ("Обновление остановлено: упала задача gradle " + ($gradleArgs -join ' ') + ". Ветка meebook уже на $Tag и .meebook-base обновлён: исправьте, закоммитьте и запустите скрипт снова.")
     }
 }
 Gradle @('spotlessApply')
@@ -70,11 +84,6 @@ $dirty = & git status --porcelain
 if ($dirty) {
     Invoke-Git add -A
     Invoke-Git commit -m 'style(meebook): spotlessApply after rebase' -m 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'
-}
-if ($oldBase -ne $Tag) {
-    Set-Content -Path '.meebook-base' -Value $Tag -Encoding Ascii
-    Invoke-Git add .meebook-base
-    Invoke-Git commit -m "chore(meebook): rebase onto $Tag" -m 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'
 }
 
 # --- 5. Итог
