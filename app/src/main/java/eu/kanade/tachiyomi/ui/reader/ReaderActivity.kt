@@ -113,6 +113,8 @@ import eu.kanade.tachiyomi.util.view.setComposeContent
 import exh.source.isEhBasedSource
 import exh.util.defaultReaderType
 import exh.util.mangaType
+import komikku.meebook.bridge.DwellTracker
+import komikku.meebook.bridge.ReadingLog
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
@@ -133,6 +135,7 @@ import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.UrlUtils
 import tachiyomi.core.common.util.system.logcat
@@ -536,6 +539,19 @@ class ReaderActivity : BaseActivity() {
         // AM (DISCORD) -->
         updateDiscordRPC(exitingReader = true)
         // <-- AM (DISCORD)
+
+        // MEEBOOK -->
+        Injekt.get<DwellTracker>().onPause()?.let { record ->
+            val log = Injekt.get<ReadingLog>()
+            val resolver = applicationContext.contentResolver
+            lifecycleScope.launchNonCancellable {
+                withIOContext {
+                    log.add(record)
+                    resolver.notifyChange(Uri.parse("content://app.komikku.meebook.bridge/"), null)
+                }
+            }
+        }
+        // MEEBOOK <--
 
         super.onPause()
     }

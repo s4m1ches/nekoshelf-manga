@@ -76,6 +76,8 @@ import exh.log.EHLogLevel
 import exh.log.EnhancedFilePrinter
 import exh.log.XLogLogcatLogger
 import exh.log.xLogD
+import komikku.meebook.bridge.DwellTracker
+import komikku.meebook.bridge.ReadingLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -96,10 +98,12 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.widget.WidgetManager
 import timber.log.Timber
 import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.addSingletonFactory
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 import java.security.Security
 import java.text.SimpleDateFormat
+import java.time.ZoneId
 import java.util.Locale
 
 class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factory {
@@ -146,6 +150,10 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         Injekt.importModule(SYPreferenceModule(this))
         Injekt.importModule(SYDomainModule())
         // SY <--
+        // MEEBOOK -->
+        Injekt.addSingletonFactory<ReadingLog> { ReadingLog(this) }
+        Injekt.addSingletonFactory<DwellTracker> { DwellTracker(System::currentTimeMillis, ZoneId::systemDefault) }
+        // MEEBOOK <--
 
         setupExhLogging() // EXH logging
         if (!LogcatLogger.isInstalled) {

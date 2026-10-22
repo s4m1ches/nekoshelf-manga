@@ -57,6 +57,8 @@ import exh.source.getMainSource
 import exh.source.isEhBasedManga
 import exh.util.defaultReaderType
 import exh.util.mangaType
+import komikku.meebook.bridge.DwellTracker
+import komikku.meebook.bridge.ReadingLog
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -130,6 +132,10 @@ class ReaderViewModel @JvmOverloads constructor(
     private val setMangaViewerFlags: SetMangaViewerFlags = Injekt.get(),
     private val getIncognitoState: GetIncognitoState = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
+    // MEEBOOK -->
+    private val dwellTracker: DwellTracker = Injekt.get(),
+    private val readingLog: ReadingLog = Injekt.get(),
+    // MEEBOOK <--
     // SY -->
     private val syncPreferences: SyncPreferences = Injekt.get(),
     private val uiPreferences: UiPreferences = Injekt.get(),
@@ -678,6 +684,12 @@ class ReaderViewModel @JvmOverloads constructor(
         if (page is InsertPage) {
             return
         }
+
+        // MEEBOOK -->
+        dwellTracker.onPageShown("${page.chapter.chapter.id}:${page.index}")?.let { record ->
+            viewModelScope.launchIO { readingLog.add(record) }
+        }
+        // MEEBOOK <--
 
         // SY -->
         mutableState.update { it.copy(currentPageText = currentPageText) }
