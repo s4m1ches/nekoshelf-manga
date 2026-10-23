@@ -17,13 +17,20 @@ object LibraryRows {
         "next_chapter_id",
         "next_chapter_name",
         "cover_version",
+        "chapters_new",
     )
 
     /**
      * Values in [COLUMNS] order. `title` is [tachiyomi.domain.manga.model.Manga.title], which in Komikku
      * already resolves the user's custom title for favourites (the accessor the library grid/list uses).
      */
-    fun row(lm: LibraryManga, next: Chapter?, sourceName: String, coverVersion: Long): Array<Any?> = arrayOf(
+    fun row(
+        lm: LibraryManga,
+        next: Chapter?,
+        sourceName: String,
+        coverVersion: Long,
+        chaptersNew: Int,
+    ): Array<Any?> = arrayOf(
         lm.manga.id,
         lm.manga.title,
         sourceName,
@@ -34,7 +41,12 @@ object LibraryRows {
         next?.id,
         next?.name,
         coverVersion,
+        chaptersNew,
     )
+
+    /** `chapters_new`: unread chapters Komikku found (`dateFetch`) after the last read; 0 for a never-read manga. */
+    fun newChapters(chapters: List<Chapter>, lastRead: Long): Int =
+        if (lastRead <= 0L) 0 else chapters.count { !it.read && it.dateFetch > lastRead }
 
     /** One entry per manga id (Komikku merged entries must never yield duplicate rows), first occurrence kept. */
     fun distinct(library: List<LibraryManga>): List<LibraryManga> = library.distinctBy { it.manga.id }

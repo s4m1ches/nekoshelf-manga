@@ -35,12 +35,13 @@ class LibraryRowsTest {
         LibraryRows.COLUMNS.toList() shouldBe listOf(
             "manga_id", "title", "source_name", "date_added", "last_read_at",
             "chapters_total", "chapters_read", "next_chapter_id", "next_chapter_name", "cover_version",
+            "chapters_new",
         )
     }
 
     @Test
     fun `row maps counts, next chapter and last read`() {
-        val row = LibraryRows.row(libraryManga(), next, "MangaDex", 123L)
+        val row = LibraryRows.row(libraryManga(), next, "MangaDex", 123L, chaptersNew = 3)
         row.size shouldBe LibraryRows.COLUMNS.size
         col(row, "manga_id") shouldBe 7L
         col(row, "title") shouldBe "Берсерк"
@@ -52,18 +53,36 @@ class LibraryRowsTest {
         col(row, "next_chapter_id") shouldBe 5059L
         col(row, "next_chapter_name") shouldBe "Глава 59"
         col(row, "cover_version") shouldBe 123L
+        col(row, "chapters_new") shouldBe 3
     }
 
     @Test
     fun `no next chapter gives null next columns`() {
-        val row = LibraryRows.row(libraryManga(), null, "MangaDex", 0L)
+        val row = LibraryRows.row(libraryManga(), null, "MangaDex", 0L, 0)
         col(row, "next_chapter_id") shouldBe null
         col(row, "next_chapter_name") shouldBe null
     }
 
     @Test
     fun `never read gives zero last read`() {
-        col(LibraryRows.row(libraryManga(lastRead = 0L), null, "S", 0L), "last_read_at") shouldBe 0L
+        col(LibraryRows.row(libraryManga(lastRead = 0L), null, "S", 0L, 0), "last_read_at") shouldBe 0L
+    }
+
+    @Test
+    fun `new chapters are unread ones fetched after the last read`() {
+        val last = 1_700_000_000_000L
+        val ch = listOf(
+            Chapter.create().copy(id = 1, read = false, dateFetch = last + 1),
+            Chapter.create().copy(id = 2, read = false, dateFetch = last + 2),
+            Chapter.create().copy(id = 3, read = true, dateFetch = last + 3),
+            Chapter.create().copy(id = 4, read = false, dateFetch = last - 1),
+        )
+        LibraryRows.newChapters(ch, last) shouldBe 2
+    }
+
+    @Test
+    fun `never read manga has no new chapters`() {
+        LibraryRows.newChapters(listOf(Chapter.create().copy(read = false, dateFetch = 5)), 0L) shouldBe 0
     }
 
     @Test
