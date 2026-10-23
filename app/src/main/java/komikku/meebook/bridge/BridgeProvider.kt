@@ -10,6 +10,7 @@ import android.os.ParcelFileDescriptor
 import eu.kanade.tachiyomi.data.backup.create.BackupCreator
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
 import eu.kanade.tachiyomi.data.cache.CoverCache
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import logcat.LogPriority
@@ -94,19 +95,28 @@ class BridgeProvider : ContentProvider() {
         return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
     }
 
-    /** A fresh full backup (same content as Settings -> Backup -> Create), written to the cache dir. */
+    /**
+     * A fresh full backup (same content as Settings -> Backup -> Create). Each call writes its own temp file in
+     * `cacheDir/meebook-bridge`, which must already exist (BackupCreator refuses a missing file), and deletes it
+     * as soon as the descriptor is open: the open descriptor keeps the data readable, nothing stays on disk.
+     */
     private fun openBackup(): ParcelFileDescriptor {
+        var file: File? = null
         try {
             val context = context ?: throw IllegalStateException("No context")
-            val file = File(context.cacheDir, "meebook-bridge-backup.tachibk")
-            file.delete()
+            val dir = File(context.cacheDir, "meebook-bridge").apply { mkdirs() }
+            file = File.createTempFile("backup-", ".tachibk", dir)
             runBlocking(Dispatchers.IO) {
                 BackupCreator(context, isAutoBackup = false).backup(Uri.fromFile(file), BackupOptions())
             }
             return ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            logcat(LogPriority.WARN, e) { "MEEBOOK: bridge backup failed" }
+            logcat(LogPriority.ERROR, e) { "MEEBOOK: bridge backup failed" }
             throw FileNotFoundException("Backup failed: ${e.message}")
+        } finally {
+            file?.delete()
         }
     }
 

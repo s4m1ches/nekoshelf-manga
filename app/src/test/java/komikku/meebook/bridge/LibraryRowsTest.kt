@@ -81,6 +81,11 @@ class LibraryRowsTest {
     }
 
     @Test
+    fun `chapter fetched exactly at the last read is not new`() {
+        LibraryRows.newChapters(listOf(Chapter.create().copy(read = false, dateFetch = 100L)), 100L) shouldBe 0
+    }
+
+    @Test
     fun `never read manga has no new chapters`() {
         LibraryRows.newChapters(listOf(Chapter.create().copy(read = false, dateFetch = 5)), 0L) shouldBe 0
     }
