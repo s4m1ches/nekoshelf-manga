@@ -1,4 +1,4 @@
-package komikku.meebook.bridge
+package komikku.nekoshelf.bridge
 
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
@@ -19,8 +19,8 @@ import java.time.format.DateTimeFormatter
  * so the whole chapter time is attributed to the local day of its last read.
  */
 object HistoryBackfill {
-    const val PREFS_NAME = "meebook_bridge"
-    const val FLAG_KEY = "meebook_backfill_done"
+    const val PREFS_NAME = "nekoshelf_bridge"
+    const val FLAG_KEY = "nekoshelf_backfill_done"
 
     private val DAY_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
@@ -86,11 +86,11 @@ object HistoryBackfill {
             try {
                 runOnce(flag, Injekt.get<ReadingLog>(), ZoneId.systemDefault()) {
                     Injekt.get<DatabaseHandler>().awaitList {
-                        historyQueries.meebookAllReadTimes { lastRead, timeRead -> (lastRead?.time ?: 0L) to timeRead }
+                        historyQueries.nekoshelfAllReadTimes { lastRead, timeRead -> (lastRead?.time ?: 0L) to timeRead }
                     }
                 }
             } catch (e: Exception) {
-                logcat(LogPriority.ERROR, e) { "MEEBOOK: history backfill failed" }
+                logcat(LogPriority.ERROR, e) { "NEKOSHELF: history backfill failed" }
             }
         }
     }

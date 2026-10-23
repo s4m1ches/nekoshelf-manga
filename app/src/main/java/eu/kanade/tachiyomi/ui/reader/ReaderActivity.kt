@@ -113,8 +113,9 @@ import eu.kanade.tachiyomi.util.view.setComposeContent
 import exh.source.isEhBasedSource
 import exh.util.defaultReaderType
 import exh.util.mangaType
-import komikku.meebook.bridge.DwellTracker
-import komikku.meebook.bridge.ReadingLog
+import komikku.nekoshelf.bridge.BridgeProvider
+import komikku.nekoshelf.bridge.DwellTracker
+import komikku.nekoshelf.bridge.ReadingLog
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
@@ -540,7 +541,7 @@ class ReaderActivity : BaseActivity() {
         updateDiscordRPC(exitingReader = true)
         // <-- AM (DISCORD)
 
-        // MEEBOOK -->
+        // NEKOSHELF -->
         val dwellRecord = Injekt.get<DwellTracker>().onPause().takeUnless { viewModel.incognitoMode }
         val readingLog = Injekt.get<ReadingLog>()
         val resolver = applicationContext.contentResolver
@@ -549,13 +550,13 @@ class ReaderActivity : BaseActivity() {
                 try {
                     dwellRecord?.let(readingLog::add)
                     // Always notify: earlier pages were written by onPageSelected without a notification.
-                    resolver.notifyChange(Uri.parse("content://app.komikku.meebook.bridge/"), null)
+                    resolver.notifyChange(Uri.parse("content://${BridgeProvider.AUTHORITY}/"), null)
                 } catch (e: Exception) {
-                    logcat(LogPriority.WARN, e) { "MEEBOOK: reading log flush failed" }
+                    logcat(LogPriority.WARN, e) { "NEKOSHELF: reading log flush failed" }
                 }
             }
         }
-        // MEEBOOK <--
+        // NEKOSHELF <--
 
         super.onPause()
     }
@@ -568,9 +569,9 @@ class ReaderActivity : BaseActivity() {
         super.onResume()
         viewModel.restartReadTimer()
 
-        // MEEBOOK -->
+        // NEKOSHELF -->
         viewModel.lastDwellKey?.let { Injekt.get<DwellTracker>().onResume(it, viewModel.incognitoMode) }
-        // MEEBOOK <--
+        // NEKOSHELF <--
 
         // AM (DISCORD) -->
         updateDiscordRPC(exitingReader = false)

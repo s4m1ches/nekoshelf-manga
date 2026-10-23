@@ -2,30 +2,30 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- MEEBOOK --> <!-- Bridge to the owner's launcher; only the meebook build exposes it. -->
+    <!-- NEKOSHELF --> <!-- Bridge to Nekoshelf Launcher; only the nekoshelf build exposes it. -->
     <permission
-        android:name="app.komikku.meebook.permission.BRIDGE"
+        android:name="app.nekoshelf.manga.permission.BRIDGE"
         android:protectionLevel="signature" />
 
     <application
-        android:label="@string/meebook_app_name"
+        android:label="@string/nekoshelf_app_name"
         tools:replace="android:label">
 
         <provider
-            android:name="komikku.meebook.bridge.BridgeProvider"
-            android:authorities="app.komikku.meebook.bridge"
+            android:name="komikku.nekoshelf.bridge.BridgeProvider"
+            android:authorities="app.nekoshelf.manga.bridge"
             android:exported="true"
-            android:readPermission="app.komikku.meebook.permission.BRIDGE" />
+            android:readPermission="app.nekoshelf.manga.permission.BRIDGE" />
 
         <activity
-            android:name="komikku.meebook.bridge.BridgeOpenActivity"
+            android:name="komikku.nekoshelf.bridge.BridgeOpenActivity"
             android:exported="true"
-            android:permission="app.komikku.meebook.permission.BRIDGE"
+            android:permission="app.nekoshelf.manga.permission.BRIDGE"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:excludeFromRecents="true"
             android:noHistory="true">
             <intent-filter>
-                <action android:name="app.komikku.meebook.action.OPEN_MANGA" />
+                <action android:name="app.nekoshelf.manga.action.OPEN_MANGA" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>

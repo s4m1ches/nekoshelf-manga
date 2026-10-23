@@ -1,4 +1,4 @@
-package komikku.meebook.bridge
+package komikku.nekoshelf.bridge
 
 import java.time.Instant
 import java.time.ZoneId

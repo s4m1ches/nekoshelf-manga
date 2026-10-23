@@ -1,4 +1,4 @@
-package komikku.meebook.bridge
+package komikku.nekoshelf.bridge
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest

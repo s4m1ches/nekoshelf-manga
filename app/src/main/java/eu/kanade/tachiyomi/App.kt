@@ -76,9 +76,9 @@ import exh.log.EHLogLevel
 import exh.log.EnhancedFilePrinter
 import exh.log.XLogLogcatLogger
 import exh.log.xLogD
-import komikku.meebook.bridge.DwellTracker
-import komikku.meebook.bridge.HistoryBackfill
-import komikku.meebook.bridge.ReadingLog
+import komikku.nekoshelf.bridge.DwellTracker
+import komikku.nekoshelf.bridge.HistoryBackfill
+import komikku.nekoshelf.bridge.ReadingLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -151,10 +151,10 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         Injekt.importModule(SYPreferenceModule(this))
         Injekt.importModule(SYDomainModule())
         // SY <--
-        // MEEBOOK -->
+        // NEKOSHELF -->
         Injekt.addSingletonFactory<ReadingLog> { ReadingLog(this) }
         Injekt.addSingletonFactory<DwellTracker> { DwellTracker(System::currentTimeMillis, ZoneId::systemDefault) }
-        // MEEBOOK <--
+        // NEKOSHELF <--
 
         setupExhLogging() // EXH logging
         if (!LogcatLogger.isInstalled) {
@@ -176,9 +176,9 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         val scope = ProcessLifecycleOwner.get().lifecycleScope
 
-        // MEEBOOK -->
+        // NEKOSHELF -->
         HistoryBackfill.start(this, scope)
-        // MEEBOOK <--
+        // NEKOSHELF <--
 
         // Show notification to disable Incognito Mode when it's enabled
         basePreferences.incognitoMode().changes()

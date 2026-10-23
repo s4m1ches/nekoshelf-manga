@@ -1,9 +1,9 @@
 ﻿<#
 .SYNOPSIS
-  Пересобирает «Манга» (ветка meebook) поверх нового релиза Komikku.
+  Пересобирает «Манга» (ветка nekoshelf) поверх нового релиза Komikku.
 .EXAMPLE
-  powershell -ExecutionPolicy Bypass -File scripts\meebook-update.ps1
-  powershell -ExecutionPolicy Bypass -File scripts\meebook-update.ps1 -Tag v1.14.1
+  powershell -ExecutionPolicy Bypass -File scripts\nekoshelf-update.ps1
+  powershell -ExecutionPolicy Bypass -File scripts\nekoshelf-update.ps1 -Tag v1.14.1
 #>
 param([string]$Tag)
 
@@ -25,12 +25,14 @@ function Invoke-Git {
 if (-not $env:JAVA_HOME) { $env:JAVA_HOME = 'C:\Program Files\Android\Android Studio\jbr' }
 
 # --- 0. Предусловия
-if (-not (Test-Path '.meebook-base')) { Fail 'Нет файла .meebook-base (должен содержать тег текущей базы, например v1.14.1).' }
-$oldBase = (Get-Content '.meebook-base' -Raw).Trim()
+if (-not (Test-Path '.nekoshelf-base')) { Fail 'Нет файла .nekoshelf-base (должен содержать тег текущей базы, например v1.14.1).' }
+$oldBase = (Get-Content '.nekoshelf-base' -Raw).Trim()
 $dirty = & git status --porcelain
 if ($dirty) { Fail 'Обновление остановлено: в рабочем дереве есть незакоммиченные изменения.' }
-& git rev-parse --verify --quiet "refs/heads/meebook" | Out-Null
-if ($LASTEXITCODE -ne 0) { Fail 'Нет ветки meebook.' }
+& git rev-parse --verify --quiet "refs/heads/nekoshelf" | Out-Null
+if ($LASTEXITCODE -ne 0) { Fail 'Нет ветки nekoshelf.' }
+& git remote get-url upstream 2>$null | Out-Null
+if ($LASTEXITCODE -ne 0) { Fail 'Нет remote upstream. Добавьте: git remote add upstream https://github.com/komikku-app/komikku.git' }
 
 # --- 1. Fetch и выбор тега
 Invoke-Git fetch upstream --tags
@@ -44,26 +46,26 @@ Write-Host "База: $oldBase -> $Tag" -ForegroundColor Cyan
 
 # --- 2. Rebase. --empty=drop: коммиты, ставшие пустыми (cherry-pick апстримного фикса,
 # который уже есть в новом релизе), тихо отбрасываются и не останавливают обновление.
-& git merge-base --is-ancestor $Tag meebook
+& git merge-base --is-ancestor $Tag nekoshelf
 if ($LASTEXITCODE -eq 0) {
     # Режим продолжения: ветка уже содержит $Tag (повторный запуск после упавшей сборки
     # или база не менялась). Rebase пропускаем, сразу проверки и сборка.
-    Write-Host "Ветка meebook уже содержит ${Tag}: rebase пропущен, переходим к проверкам и сборке." -ForegroundColor Yellow
+    Write-Host "Ветка nekoshelf уже содержит ${Tag}: rebase пропущен, переходим к проверкам и сборке." -ForegroundColor Yellow
 } else {
-    & git rebase --empty=drop --onto $Tag $oldBase meebook
+    & git rebase --empty=drop --onto $Tag $oldBase nekoshelf
     if ($LASTEXITCODE -ne 0) {
         $conflicts = (& git diff --name-only --diff-filter=U) -join ', '
         & git rebase --abort
         if (-not $conflicts) { $conflicts = '(файлы не определены, см. вывод git выше)' }
-        Fail "Обновление остановлено: конфликт в $conflicts. Rebase отменён, ветка meebook не тронута. Разберите конфликт вручную."
+        Fail "Обновление остановлено: конфликт в $conflicts. Rebase отменён, ветка nekoshelf не тронута. Разберите конфликт вручную."
     }
 }
 
 # Фиксируем новую базу сразу, до сборки: повторный запуск после сбоя не будет переигрывать коммиты.
 if ($oldBase -ne $Tag) {
-    Set-Content -Path '.meebook-base' -Value $Tag -Encoding Ascii
-    Invoke-Git add .meebook-base
-    Invoke-Git commit -m "chore(meebook): rebase onto $Tag" -m 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'
+    Set-Content -Path '.nekoshelf-base' -Value $Tag -Encoding Ascii
+    Invoke-Git add .nekoshelf-base
+    Invoke-Git commit -m "chore(nekoshelf): rebase onto $Tag" -m 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'
 }
 
 # --- 3. Проверки и сборка (стоп на первой ошибке)
@@ -71,23 +73,23 @@ function Gradle([string[]]$gradleArgs) {
     Write-Host (".\gradlew.bat " + ($gradleArgs -join ' ')) -ForegroundColor Cyan
     & .\gradlew.bat @gradleArgs
     if ($LASTEXITCODE -ne 0) {
-        Fail ("Обновление остановлено: упала задача gradle " + ($gradleArgs -join ' ') + ". Ветка meebook уже на $Tag и .meebook-base обновлён: исправьте, закоммитьте и запустите скрипт снова.")
+        Fail ("Обновление остановлено: упала задача gradle " + ($gradleArgs -join ' ') + ". Ветка nekoshelf уже на $Tag и .nekoshelf-base обновлён: исправьте, закоммитьте и запустите скрипт снова.")
     }
 }
 Gradle @('spotlessApply')
 Gradle @('spotlessCheck')
-Gradle @(':app:testMeebookUnitTest', '--tests', 'komikku.meebook.bridge.*')
-Gradle @(':app:assembleMeebook')
+Gradle @(':app:testNekoshelfUnitTest', '--tests', 'komikku.nekoshelf.bridge.*')
+Gradle @(':app:assembleNekoshelf')
 
 # --- 4. Фиксация результата
 $dirty = & git status --porcelain
 if ($dirty) {
     Invoke-Git add -A
-    Invoke-Git commit -m 'style(meebook): spotlessApply after rebase' -m 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'
+    Invoke-Git commit -m 'style(nekoshelf): spotlessApply after rebase' -m 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'
 }
 
 # --- 5. Итог
-$apk = Join-Path $repo 'app\build\outputs\apk\meebook\app-universal-meebook.apk'
+$apk = Join-Path $repo 'app\build\outputs\apk\nekoshelf\app-universal-nekoshelf.apk'
 $adb = Join-Path $env:LOCALAPPDATA 'Android\Sdk\platform-tools\adb.exe'
 Write-Host ''
 Write-Host "Готово: «Манга» собрана на $Tag." -ForegroundColor Green

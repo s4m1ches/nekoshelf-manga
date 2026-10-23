@@ -1,4 +1,4 @@
-package komikku.meebook.bridge
+package komikku.nekoshelf.bridge
 
 import android.content.ContentProvider
 import android.content.ContentValues
@@ -29,7 +29,7 @@ import java.io.FileNotFoundException
 /**
  * Read-only bridge for the owner's launcher: `library`, `cover/#`, `stats_daily`, `totals`, `backup`
  * (contract: `docs/superpowers/specs/2026-10-23-manga-bridge-contract.md` in the launcher repo).
- * Declared only in the meebook manifest, guarded by the signature permission `…permission.BRIDGE`.
+ * Declared only in the nekoshelf manifest, guarded by the signature permission `…permission.BRIDGE`.
  * Called from the launcher's IO thread, so the suspend interactors are run with [runBlocking].
  */
 class BridgeProvider : ContentProvider() {
@@ -63,13 +63,13 @@ class BridgeProvider : ContentProvider() {
                 val next = try {
                     getNextChapters.await(lm.manga.id, onlyUnread = true).firstOrNull()
                 } catch (e: Exception) {
-                    logcat(LogPriority.WARN, e) { "MEEBOOK: next chapter of ${lm.manga.id} failed" }
+                    logcat(LogPriority.WARN, e) { "NEKOSHELF: next chapter of ${lm.manga.id} failed" }
                     null
                 }
                 val chaptersNew = try {
                     LibraryRows.newChapters(getChapters.await(lm.manga.id), lm.lastRead)
                 } catch (e: Exception) {
-                    logcat(LogPriority.WARN, e) { "MEEBOOK: new chapters of ${lm.manga.id} failed" }
+                    logcat(LogPriority.WARN, e) { "NEKOSHELF: new chapters of ${lm.manga.id} failed" }
                     0
                 }
                 val sourceName = sourceManager.getOrStub(lm.manga.source).name
@@ -97,14 +97,14 @@ class BridgeProvider : ContentProvider() {
 
     /**
      * A fresh full backup (same content as Settings -> Backup -> Create). Each call writes its own temp file in
-     * `cacheDir/meebook-bridge`, which must already exist (BackupCreator refuses a missing file), and deletes it
+     * `cacheDir/nekoshelf-bridge`, which must already exist (BackupCreator refuses a missing file), and deletes it
      * as soon as the descriptor is open: the open descriptor keeps the data readable, nothing stays on disk.
      */
     private fun openBackup(): ParcelFileDescriptor {
         var file: File? = null
         try {
             val context = context ?: throw IllegalStateException("No context")
-            val dir = File(context.cacheDir, "meebook-bridge").apply { mkdirs() }
+            val dir = File(context.cacheDir, "nekoshelf-bridge").apply { mkdirs() }
             file = File.createTempFile("backup-", ".tachibk", dir)
             runBlocking(Dispatchers.IO) {
                 BackupCreator(context, isAutoBackup = false).backup(Uri.fromFile(file), BackupOptions())
@@ -113,7 +113,7 @@ class BridgeProvider : ContentProvider() {
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "MEEBOOK: bridge backup failed" }
+            logcat(LogPriority.ERROR, e) { "NEKOSHELF: bridge backup failed" }
             throw FileNotFoundException("Backup failed: ${e.message}")
         } finally {
             file?.delete()
@@ -143,7 +143,7 @@ class BridgeProvider : ContentProvider() {
         throw UnsupportedOperationException("Read-only")
 
     companion object {
-        const val AUTHORITY = "app.komikku.meebook.bridge"
+        const val AUTHORITY = "app.nekoshelf.manga.bridge"
         private const val LIBRARY = 1
         private const val COVER = 2
         private const val STATS_DAILY = 3

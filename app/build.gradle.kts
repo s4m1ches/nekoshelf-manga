@@ -2,7 +2,7 @@ import mihon.buildlogic.Config
 import mihon.buildlogic.getBuildTime
 import mihon.buildlogic.getCommitCount
 import mihon.buildlogic.getGitSha
-import java.util.Properties // MEEBOOK
+import java.util.Properties // NEKOSHELF
 
 plugins {
     id("mihon.android.application")
@@ -41,21 +41,30 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    // MEEBOOK -->
+    // NEKOSHELF -->
+    // Path to a keystore .properties file (storeFile, storePassword, keyAlias, keyPassword), from the
+    // Gradle property or env var NEKOSHELF_KEYSTORE_PROPERTIES. Absent -> the nekoshelf build uses the debug key.
+    val nekoshelfKeystoreProps = (
+        providers.gradleProperty("NEKOSHELF_KEYSTORE_PROPERTIES").orNull
+            ?: providers.environmentVariable("NEKOSHELF_KEYSTORE_PROPERTIES").orNull
+        )
+        ?.takeIf { it.isNotBlank() }
+        ?.let { file(it) }
     signingConfigs {
-        create("meebook") {
-            val keystoreFile = file("<keystore.properties>")
-            if (!keystoreFile.exists()) {
-                throw GradleException("MEEBOOK: signing properties not found: ${keystoreFile.path}")
+        if (nekoshelfKeystoreProps != null) {
+            create("nekoshelf") {
+                if (!nekoshelfKeystoreProps.exists()) {
+                    throw GradleException("NEKOSHELF: NEKOSHELF_KEYSTORE_PROPERTIES points to a missing file")
+                }
+                val keystoreProps = Properties().apply { nekoshelfKeystoreProps.inputStream().use { load(it) } }
+                storeFile = file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
             }
-            val keystoreProps = Properties().apply { keystoreFile.inputStream().use { load(it) } }
-            storeFile = file(keystoreProps.getProperty("storeFile"))
-            storePassword = keystoreProps.getProperty("storePassword")
-            keyAlias = keystoreProps.getProperty("keyAlias")
-            keyPassword = keystoreProps.getProperty("keyPassword")
         }
     }
-    // MEEBOOK <--
+    // NEKOSHELF <--
 
     buildTypes {
         val debug by getting {
@@ -102,19 +111,19 @@ android {
 
             buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLastCommitTime = false)}\"")
         }
-        // MEEBOOK -->
-        create("meebook") {
+        // NEKOSHELF -->
+        // applicationId app.nekoshelf.manga is set in androidComponents below (this build type only).
+        create("nekoshelf") {
             initWith(release)
 
-            applicationIdSuffix = ".meebook"
             isMinifyEnabled = false
             isShrinkResources = false
 
-            signingConfig = signingConfigs.getByName("meebook")
+            signingConfig = signingConfigs.findByName("nekoshelf") ?: debug.signingConfig
 
             matchingFallbacks.addAll(commonMatchingFallbacks)
         }
-        // MEEBOOK <--
+        // NEKOSHELF <--
         create("benchmark") {
             initWith(release)
 
@@ -373,6 +382,12 @@ androidComponents {
         // Layout Inspector's Compose tree
         it.packaging.resources.excludes.add("META-INF/*.version")
     }
+    // NEKOSHELF -->
+    // Own applicationId for our build type only; upstream's base id and other build types stay as they are.
+    onVariants(selector().withBuildType("nekoshelf")) {
+        it.applicationId.set("app.nekoshelf.manga")
+    }
+    // NEKOSHELF <--
 }
 
 buildscript {

@@ -79,8 +79,8 @@ getReadDuration:
 SELECT coalesce(sum(time_read), 0)
 FROM history;
 
--- MEEBOOK -->
-meebookAllReadTimes:
+-- NEKOSHELF -->
+nekoshelfAllReadTimes:
 SELECT last_read, time_read
 FROM history;
--- MEEBOOK <--
+-- NEKOSHELF <--

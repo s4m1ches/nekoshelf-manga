@@ -1,4 +1,4 @@
-package komikku.meebook.bridge
+package komikku.nekoshelf.bridge
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
@@ -41,7 +41,7 @@ class InMemoryReadingLogStore : ReadingLogStore {
     override fun all(): List<ReadingLogRow> = rows.values.toList()
 }
 
-/** `meebook_bridge.db`, table `reading_log(day PK, pages, seconds, backfilled DEFAULT 0)`. */
+/** `nekoshelf_bridge.db`, table `reading_log(day PK, pages, seconds, backfilled DEFAULT 0)`. */
 class SqliteReadingLogStore(context: Context) :
     SQLiteOpenHelper(context.applicationContext, DB_NAME, null, DB_VERSION),
     ReadingLogStore {
@@ -90,7 +90,7 @@ class SqliteReadingLogStore(context: Context) :
     }
 
     companion object {
-        const val DB_NAME = "meebook_bridge.db"
+        const val DB_NAME = "nekoshelf_bridge.db"
         private const val DB_VERSION = 1
     }
 }

@@ -1,4 +1,4 @@
-package komikku.meebook.bridge
+package komikku.nekoshelf.bridge
 
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.library.model.LibraryManga

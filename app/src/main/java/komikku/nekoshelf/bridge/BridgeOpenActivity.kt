@@ -1,4 +1,4 @@
-package komikku.meebook.bridge
+package komikku.nekoshelf.bridge
 
 import android.content.Intent
 import android.os.Bundle
@@ -95,7 +95,7 @@ class BridgeOpenActivity : ComponentActivity() {
     }
 
     companion object {
-        const val ACTION_OPEN_MANGA = "app.komikku.meebook.action.OPEN_MANGA"
+        const val ACTION_OPEN_MANGA = "app.nekoshelf.manga.action.OPEN_MANGA"
         const val EXTRA_MANGA_ID = "manga_id"
     }
 }
