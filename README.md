@@ -1,3 +1,9 @@
+<!-- NEKOSHELF -->
+> **Это Nekoshelf Manga** — форк Komikku для e-ink лаунчера [Nekoshelf](https://github.com/s4m1ches/nekoshelf): мост к лаунчеру (библиотека, новые главы, статистика, бэкап), подпись «Манга». Скачать: [релизы](https://github.com/s4m1ches/nekoshelf-manga/releases/latest) (ставьте вместе с лаунчером, оба подписаны одним ключом). Что изменено и как собрать — [NEKOSHELF.md](NEKOSHELF.md). Ниже — README оригинального Komikku.
+>
+> *This is Nekoshelf Manga, a Komikku fork for the [Nekoshelf](https://github.com/s4m1ches/nekoshelf) e-ink launcher. Get it from [Releases](https://github.com/s4m1ches/nekoshelf-manga/releases/latest); fork notes in [NEKOSHELF.md](NEKOSHELF.md). The upstream Komikku README follows.*
+<!-- /NEKOSHELF -->
+
 <div align="center">
 
 <a href="https://komikku-app.github.io">
