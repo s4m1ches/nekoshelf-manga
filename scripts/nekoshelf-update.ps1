@@ -65,7 +65,7 @@ if ($LASTEXITCODE -eq 0) {
 if ($oldBase -ne $Tag) {
     Set-Content -Path '.nekoshelf-base' -Value $Tag -Encoding Ascii
     Invoke-Git add .nekoshelf-base
-    Invoke-Git commit -m "chore(nekoshelf): rebase onto $Tag" -m 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'
+    Invoke-Git commit -m "chore(nekoshelf): rebase onto $Tag"
 }
 
 # --- 3. Проверки и сборка (стоп на первой ошибке)
@@ -85,7 +85,7 @@ Gradle @(':app:assembleNekoshelf')
 $dirty = & git status --porcelain
 if ($dirty) {
     Invoke-Git add -A
-    Invoke-Git commit -m 'style(nekoshelf): spotlessApply after rebase' -m 'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'
+    Invoke-Git commit -m 'style(nekoshelf): spotlessApply after rebase'
 }
 
 # --- 5. Итог
